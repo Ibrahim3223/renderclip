@@ -1,6 +1,7 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 import requests
 import os
+from utils import transcribe_audio, find_best_segment, edit_video
 
 app = Flask(__name__)
 
@@ -18,19 +19,29 @@ def upload_url():
         if not video_url:
             return jsonify({"error": "Missing 'url' field"}), 400
 
-        # Video indirme işlemi
         response = requests.get(video_url)
         if response.status_code != 200:
             return jsonify({"error": "Failed to download video"}), 400
 
-        # Dosya kaydet (test amaçlı basit işlem)
         with open("video.mp4", "wb") as f:
             f.write(response.content)
 
-        return jsonify({"status": "Video downloaded successfully!"}), 200
+        # 🔁 Transcribe & edit
+        transcript = transcribe_audio("video.mp4")
+        start, duration = find_best_segment(transcript)
+        final_path = edit_video("video.mp4", start, duration)
+
+        return jsonify({
+            "status": "Success",
+            "download_url": request.url_root + "download"
+        }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/download", methods=["GET"])
+def download():
+    return send_file("final.mp4", as_attachment=True)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
