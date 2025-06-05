@@ -1,7 +1,10 @@
 flask
 requests
 moviepy
+imageio
 imageio-ffmpeg
+numpy
+decorator
 openai-whisper
 torch
 ffmpeg-python
