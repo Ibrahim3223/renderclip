@@ -1,4 +1,6 @@
 flask
 requests
-whisper
+moviepy
+openai-whisper
+torch
 ffmpeg-python
